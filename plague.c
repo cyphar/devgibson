@@ -123,7 +123,7 @@ static ssize_t gibson_read(struct file *file, char *buffer, size_t length, loff_
 }
 
 static ssize_t gibson_write(struct file *filp, const char *buff, size_t len, loff_t *off) {
-	pr_err("ARF! ARF! WE GOTCHA!");
+	pr_err("ARF! ARF! WE GOTCHA!\n");
 	return -EINVAL;
 }
 
