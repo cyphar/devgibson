@@ -77,8 +77,10 @@ static int gibson_release(struct inode *inode, struct file *file) {
 
 static ssize_t gibson_read(struct file *file, char *buffer, size_t length, loff_t *offset) {
 	struct gibson_t *gibson = file->private_data;
-
 	int bytes_read = 0;
+
+	if(gibson->done)
+		return 0;
 
 	if(gibson->first) {
 		pr_info("%s presents: `%s' (directed by %s)\n", gibson->script->presenter, gibson->script->title, gibson->script->director);
