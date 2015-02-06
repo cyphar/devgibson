@@ -30,7 +30,7 @@ with open(sys.argv[1], "rb") as f:
 
 		if line.strip() == "":
 			# End dialogue
-			print("""{.character = "%s", .text = "%s"},""" % (person, text.strip()))
+			print("""{.character = "%s", .text = "%s"},""" % (person.replace('"', r'\"'), text.strip().replace('"', r'\"')))
 			person = None
 			text = ""
 			continue
