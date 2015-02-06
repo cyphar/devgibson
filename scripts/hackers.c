@@ -25,8 +25,8 @@
 
 struct script_t hackers = {
 	/* metadata */
-	.title = "Hello, world!",
-	.director = "God",
+	.title = "Hackers (1995)",
+	.director = "Iain Softley",
 	.presenter = "Tux",
 
 	/* use casting magic to allow sizeof it do its magic */
