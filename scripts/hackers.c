@@ -26,17 +26,17 @@
 struct script_t hackers = {
 	/* metadata */
 	.title = "Hello, world!",
-	.director = "God.",
-	.presenter = "cyphar",
+	.director = "God",
+	.presenter = "Tux",
 
 	/* use casting magic to allow sizeof it do its magic */
 	/* your syntax highlighter might start bleeding from its parsers, but that's just part of the hacking process */
-	.len = sizeof((char []){
+	.len = sizeof((struct line_t[]){
 #include "hackers.h"
-	}),
+	}) / sizeof(struct line_t),
 
 	/* include the data */
-	.data = {
+	.lines = {
 #include "hackers.h"
 	},
 };

@@ -37,10 +37,15 @@ struct gibson_t {
 	bool first;
 
 	struct script_t *script;
+	int line;
+
+	size_t msg_len;
+	char *msg;
 	char *msgp;
 };
 
 #define DEVICE_NAME "gibson"
+#define LINE_FORMAT "<%s> %s\n"
 
 extern struct script_t hackers;
 
@@ -53,14 +58,20 @@ static int gibson_open(struct inode *inode, struct file *file) {
 
 	gibson->first = true;
 	gibson->script = &hackers;
-	gibson->msgp = gibson->script->data;
+
+	gibson->line = 0;
+	gibson->msg = NULL;
+	gibson->msgp = NULL;
 
 	file->private_data = gibson;
 	return 0;
 }
 
 static int gibson_release(struct inode *inode, struct file *file) {
-	kfree(file->private_data);
+	struct gibson_t *gibson = file->private_data;
+
+	kfree(gibson->msg);
+	kfree(gibson);
 	return 0;
 }
 
@@ -70,19 +81,38 @@ static ssize_t gibson_read(struct file *file, char *buffer, size_t length, loff_
 	int bytes_read = 0;
 
 	if(gibson->first) {
-		pr_info("Title:     %s\n", gibson->script->title);
-		pr_info("Director:  %s\n", gibson->script->director);
-		pr_info("Presenter: %s\n", gibson->script->presenter);
-
+		pr_info("%s presents: `%s' (directed by %s)\n", gibson->script->presenter, gibson->script->title, gibson->script->director);
 		gibson->first = false;
 	}
 
-	if(gibson->msgp - gibson->script->data >= gibson->script->len) {
+	if(gibson->msg && (gibson->msgp - gibson->msg) >= gibson->msg_len) {
+		kfree(gibson->msg);
+
+		gibson->line++;
+		gibson->msg_len = 0;
+		gibson->msg = NULL;
+		gibson->msgp = NULL;
+	}
+
+	if(gibson->line >= gibson->script->len) {
 		gibson->done = true;
 		return 0;
 	}
 
-	while((length-- > 0) && (gibson->msgp - gibson->script->data) < gibson->script->len) {
+	if(!gibson->msg) {
+		struct line_t *cur = &gibson->script->lines[gibson->line];
+
+		/* get the required buffer size */
+		int size = snprintf(NULL, 0, LINE_FORMAT, cur->character, cur->text) + 1;
+		gibson->msg = kzalloc(size + 1, GFP_KERNEL);
+		snprintf(gibson->msg, size, LINE_FORMAT, cur->character, cur->text);
+
+		/* update length and pointers */
+		gibson->msgp = gibson->msg;
+		gibson->msg_len = size - 1;
+	}
+
+	while((length-- > 0) && (gibson->msgp - gibson->msg) < gibson->msg_len) {
 		put_user(*(gibson->msgp++), buffer++);
 		bytes_read++;
 	}

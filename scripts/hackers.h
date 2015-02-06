@@ -1,2 +1,4 @@
-  0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64,
-  0x21, 0x0a
+{.character = "cyphar", .text = "Hello, world?"},
+{.character = "sysr-q", .text = "Got r00t y3t?"},
+{.character = "cyphar", .text = "#go-fuck-yourself"},
+{.character = "sysr-q", .text = "That costs extra."},

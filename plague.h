@@ -26,13 +26,18 @@
 
 #include <linux/types.h>
 
+struct line_t {
+	char *character;
+	char *text;
+};
+
 struct script_t {
 	char *title;
 	char *director;
 	char *presenter;
 
 	size_t len;
-	char data[];
+	struct line_t lines[];
 };
 
 #endif /* __GIBSON_H__ */
