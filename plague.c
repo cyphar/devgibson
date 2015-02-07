@@ -49,7 +49,14 @@ struct gibson_t {
 
 extern struct script_t hackers;
 
-static int gibson_open(struct inode *inode, struct file *file) {
+static void __gibson_msg_reset(struct gibson_t *gibson) {
+	kfree(gibson->msg);
+	gibson->msg_len = 0;
+	gibson->msg = NULL;
+	gibson->msgp = NULL;
+}
+
+static int gibson_open(struct inode *inode, struct file *filp) {
 	struct gibson_t *gibson;
 
 	gibson = kzalloc(sizeof(*gibson), GFP_KERNEL);
@@ -63,20 +70,20 @@ static int gibson_open(struct inode *inode, struct file *file) {
 	gibson->msg = NULL;
 	gibson->msgp = NULL;
 
-	file->private_data = gibson;
+	filp->private_data = gibson;
 	return 0;
 }
 
-static int gibson_release(struct inode *inode, struct file *file) {
-	struct gibson_t *gibson = file->private_data;
+static int gibson_release(struct inode *inode, struct file *filp) {
+	struct gibson_t *gibson = filp->private_data;
 
 	kfree(gibson->msg);
 	kfree(gibson);
 	return 0;
 }
 
-static ssize_t gibson_read(struct file *file, char *buffer, size_t length, loff_t *offset) {
-	struct gibson_t *gibson = file->private_data;
+static ssize_t gibson_read(struct file *filp, char *buffer, size_t length, loff_t *offset) {
+	struct gibson_t *gibson = filp->private_data;
 	int bytes_read = 0;
 
 	if(gibson->done)
@@ -88,12 +95,8 @@ static ssize_t gibson_read(struct file *file, char *buffer, size_t length, loff_
 	}
 
 	if(gibson->msg && (gibson->msgp - gibson->msg) >= gibson->msg_len) {
-		kfree(gibson->msg);
-
+		__gibson_msg_reset(gibson);
 		gibson->line++;
-		gibson->msg_len = 0;
-		gibson->msg = NULL;
-		gibson->msgp = NULL;
 	}
 
 	if(gibson->line >= gibson->script->len) {
@@ -122,6 +125,35 @@ static ssize_t gibson_read(struct file *file, char *buffer, size_t length, loff_
 	return bytes_read;
 }
 
+static loff_t gibson_llseek(struct file *filp, loff_t off, int whence) {
+	struct gibson_t *gibson = filp->private_data;
+	int new_pos = 0;
+
+	switch(whence) {
+		case SEEK_SET:
+			new_pos = off;
+			break;
+
+		case SEEK_CUR:
+			new_pos = gibson->line + off;
+			break;
+
+		case SEEK_END:
+			new_pos = gibson->script->len + off;
+			break;
+
+		default:
+			return -EINVAL;
+	}
+
+	if(new_pos < 0 || new_pos > gibson->script->len)
+		return -EINVAL;
+
+	__gibson_msg_reset(gibson);
+	gibson->line = new_pos;
+	return new_pos;
+}
+
 static ssize_t gibson_write(struct file *filp, const char *buff, size_t len, loff_t *off) {
 	pr_err("ARF! ARF! WE GOTCHA!\n");
 	return -EINVAL;
@@ -131,6 +163,7 @@ static const struct file_operations fops = {
 	.owner   = THIS_MODULE,
 	.read    = gibson_read,
 	.write   = gibson_write,
+	.llseek  = gibson_llseek,
 	.open    = gibson_open,
 	.release = gibson_release,
 };
