@@ -2,7 +2,7 @@
 Because sometimes you feel like there aren't enough Hackers in your goddamn kernel.
 We're here to fix you right up.
 
-[![They're in the Kernel!](http://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](http://youtu.be/VIDEO_ID)
+[![They're in the Kernel!](http://img.youtube.com/vi/szsagYpsyig/0.jpg)](http://youtu.be/szsagYpsyig)
 
 ### Dependencies ###
 In order to build `/dev/gibson` you need to have the relevant kernel header pages as well as a working build toolchain.
