@@ -110,6 +110,8 @@ static ssize_t gibson_read(struct file *filp, char *buffer, size_t length, loff_
 		/* get the required buffer size */
 		int size = snprintf(NULL, 0, LINE_FORMAT, cur->character, cur->text) + 1;
 		gibson->msg = kzalloc(size + 1, GFP_KERNEL);
+		if(!gibson->msg)
+			return -ENOMEM;
 		snprintf(gibson->msg, size, LINE_FORMAT, cur->character, cur->text);
 
 		/* update length and pointers */
